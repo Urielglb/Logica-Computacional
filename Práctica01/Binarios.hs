@@ -51,10 +51,18 @@ natBinLista n
     | mod n 2 == 0 = ((natBinLista(div n 2)) ++ [0])
     |otherwise = ((natBinLista(div n 2))++[1])
 
+
+natABin :: Int -> Binario
+natABin 1 = U
+natABin n
+  | mod n 2 == 0 = (Cero (natABin(div n 2)))
+  |otherwise = (Uno (natABin(div n 2)))
+
+
 -- | sumaBinLista. Regresa la suma de 2 listas que representan 2 numeros binarios.
 -- -> ejemplo sumaBinLista de [1] [1,0] = (Uno U)
 sumaBinLista :: [Int] -> [Int] -> Binario
-sumaBinLista l1 l2 = suma (lista2Binario (reverse l1)) (lista2Binario (reverse l2)) 
+sumaBinLista l1 l2 = suma (lista2Binario (reverse l1)) (lista2Binario (reverse l2))
 
 lista2Binario:: [Int] -> Binario
 lista2Binario (i:[]) = U
