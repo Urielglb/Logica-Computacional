@@ -19,33 +19,70 @@ type Solucion = (Modelo, Formula)
 
 -- Seccion de funciones para la regla de la clausula unitaria
 
+esLiteral :: Clausula -> Bool
+esLiteral [x] = True
+esLiteral m = False 
+
+
 unit :: Solucion -> Solucion
-unit s@(m,f) = error "Funcion a implementar"
+unit (m,[]) = (m,[])
+unit (m,x:xs)
+        | esLiteral x = (m++x,xs)
+        | otherwise = (mod,x:form)
+            where (mod,form) = unit(m,xs)
 
 --  Seccion de funciones para la regla de eliminacion
 
+
 elim :: Solucion -> Solucion
-elim s@(m,f) = error "Funcion a implementar"
+elim ([],m) = ([],m)
+elim(m,[]) = (m,[])
+elim (m, f) = (m, [c| c<-f, [y| y<-c, elem y m]==[]])
+
 
 -- Seccion de funciones para la regla de reduccion
 
+redC :: Modelo->Clausula->Clausula
+redC m c = [clau | clau<-c, not(negElem clau m)]
+
 red :: Solucion -> Solucion
-red s@(m,f) = error "Funcion a implementar"
+red s@(m, []) = s
+red (m, c:f) = (m, (redC m c):reducido)
+        where (_, reducido) = red (m, f)
+
+
+
+negElem:: Literal->Modelo->Bool
+negElem (Neg l) m =  elem l m
+negElem _ _ = False 
 
 -- Seccion de funciones para la regla de separacion
 
+lc :: Literal -> Literal
+lc (Neg x) = x
+lc x = Neg x
+
+literales:: Formula -> [Literal]
+literales[] = []
+literales (y:ys) = union y (literales ys)
+
 split :: Solucion -> [Solucion]
-split s@(m,f) = error "Funcion a implementar"
+split s@(m,f) = case [x|x<-literales f,not(elem x m),not(elem (lc x) m)] of
+        []->[s]
+        (x:xs)->[(x:m,f),(lc x:m,f)]  
+
 
 -- Seccion de funciones para la regla de conflicto
 
 conflict :: Solucion -> Bool
-conflict (m,f) = error "Funcion a implementar"
+conflict(m,[[]]) = True
+conflict(m,f) = False
 
 -- Seccion de funciones para la regla de exito
 
 success :: Solucion -> Bool
-success (m,f) = error "Funcion a implementar"
+success (m,[]) = True
+success(m,f) = False
 
 -- Ejemplos
 
