@@ -38,9 +38,7 @@ subconj :: [a] -> [[a]]
 subconj [] = [[]]
 subconj (x:l) = [x:al| al<-subconj l]++subconj l
 
-
-
-
+-- / Convierte una lista a un conjunto. Quita las repeticiones de las listas.
 conjuntisa::Eq a => [a] -> [a]
 conjuntisa [] = []
 conjuntisa s@(a:l)
