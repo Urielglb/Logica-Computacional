@@ -27,7 +27,7 @@ union l m = [x | x<-l, not (elem x m)]++m
 
 -- / union2. Funcion que devuelve la union de una lista de lista [[1],[2]] = [1,2]
 union2 :: Eq a => [[a]] -> [a]
-union2 l = conjuntisa  [y | x<-l, y<-x] 
+union2 l = conjuntisa  [y | x<-l, y<-x]
 
 -- | inter. Función que devuelve la intersección de listas.
 inter :: Eq a => [a] -> [a] -> [a]
@@ -35,7 +35,11 @@ inter l1 l2 =  [x |x<-l1, y<-l2, x==y]
 
 -- / subconj. Función que devuelve la potencia de una lista
 subconj :: [a] -> [[a]]
-subconj  = error "aaaaaaaaaaaaaaaahhhhhhhhhhhhhhh!!!"
+subconj [] = [[]]
+subconj (x:l) = [x:al| al<-subconj l]++subconj l
+
+
+
 
 conjuntisa::Eq a => [a] -> [a]
 conjuntisa [] = []
