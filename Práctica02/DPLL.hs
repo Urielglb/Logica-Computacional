@@ -58,16 +58,18 @@ negElem _ _ = False
 
 -- Seccion de funciones para la regla de separacion
 
- 
+lc :: Literal -> Literal
+lc (Neg x) = x
+lc x = Neg x
+
 literales:: Formula -> [Literal]
 literales[] = []
-literales [y] = [x | x<-y]
-literales[y:ys] = [x| x <- literales [ys],not(elem x (literales [[y]]) ) ]
+literales (y:ys) = union y (literales ys)
 
 split :: Solucion -> [Solucion]
-split s@(m,f) = case [x|x<-literales f,not(elem x m),not(elem (Neg x) m)] of
+split s@(m,f) = case [x|x<-literales f,not(elem x m),not(elem (lc x) m)] of
         []->[s]
-        (x:xs)->[(x:m,f),(Neg(x):m,f)]  
+        (x:xs)->[(x:m,f),(lc x:m,f)]  
 
 
 -- Seccion de funciones para la regla de conflicto
