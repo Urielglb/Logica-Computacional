@@ -83,26 +83,26 @@ estadosConj :: [Prop] -> [Estado]
 estadosConj lp = union2 [e | p<-lp, e<-estados p]
 
 -- | modelosConj. Función que dado un conjunto de fórmulas, devuelva el
--- conjunto de todos los posibles modelos del conjunto de fórmulas.
+-- conjunto de todos los posibles modelos del conjunto de fórmulas.[Modelos]
 modelosConj :: [Prop] -> [Estado]
-modelosConj lp = error "Funcion a implementar"
+modelosConj lp = [modelos p | p<-lp, ]
 
 -- | satisfenConj. Función que dada una interpretación y un conjunto de fórmulas,
 -- indique si el conjunto es satisfacible en el estado dado.
 satisfenConj :: Estado -> [Prop] -> Bool
-satisfenConj e lp = error "Funcion a implementar"
+satisfenConj e lp = and [i e p | p<-lp]
 
 -- | satisfConj. Función que dado un conjunto de fórmulas,
 -- indique si el conjunto es satisfacible.
 satisfConj :: [Prop] -> Bool
-satisfConj l = error "Funcion a implementar"
+satisfConj lp = or [satisfConj e lp | e<-estadosConj lp]
 
 -- | insatisfenConj. Función que dada una interpretación y un conjunto de
 -- fórmulas, indique si el conjunto es insatisfacible en el estado dado.
 insatisfenConj :: Estado -> [Prop] -> Bool
-insatisfenConj e lp = error "Funcion a implementar"
+insatisfenConj e lp = not (and [i e p | p<-lp])
 
 -- | insatisfConj. Función que dado un conjunto de fórmulas, indique si el
 -- conjunto es insatisfacible.
 insatisfConj :: [Prop] -> Bool
-insatisfConj l = error "Funcion a implementar"
+insatisfConj l = not (or [satisfConj e lp | e<-estadosConj lp])
