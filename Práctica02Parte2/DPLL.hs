@@ -6,6 +6,7 @@
 - Laboratorio: Pedro Juan Salvador Sanchez Perez
 -}
 
+
 module DPLL where
 
 import LProp
@@ -18,18 +19,18 @@ type Formula = [Clausula]
 type Modelo = [Literal]
 type Solucion = (Modelo, Formula)
 
-data MyException = FAIL
+data MyException = FAIL | EmptyArray
      deriving Show
 instance Exception MyException
 
 
 
 obtenSolucion:: [Solucion]-> Solucion
-
-obtenSolucion [] =  throw FAIL
+obtenSolucion []  = throw EmptyArray
+obtenSolucion [x] = x
 obtenSolucion (x:l)
-  | success x = x
-  | otherwise = obtenSolucion l
+  | conflict x = obtenSolucion l
+  | otherwise = x
 
 noContiene:: Literal -> Modelo -> Bool
 noContiene l [] = False
@@ -54,25 +55,24 @@ allUnit s@(m,f) = case [head l | l <- f, esLiteral l] of
                 w -> [((m `union` [a]), f \\ [[a]])| a <- w]
 
 unit :: Solucion -> Solucion
-unit s@(m,f) = case [head l | l <- f, esLiteral l] of
-        []->s
-        v -> case [b | b<-v, not (negElem b m)] of
-                [] -> s
-                w -> obtenSolucion([dpll((m `union` [a]), f \\ [[a]])| a <- w])
+unit s@(m,f)  
+        | s== (head $ allUnit s) = s
+        | otherwise = obtenSolucion([dpll m | m <- allUnit s])  
 
---  Seccion de funciones para la regla de eliminacion
 
 elimLit :: Literal-> Formula -> Formula
 elimLit lit form = [c | c<-form, not (elem lit c)]
 
 allElim :: Solucion -> [Solucion]
 allElim s@(m,[]) = [s]
-allElim (m, f) =[ (m,  elimLit lit f) | lit<-m]
-
+allElim s@(m, f) = case [(m,  elimLit lit f) | lit<-m, (elimLit lit f)/= f] of
+        []-> [s]
+        v -> v
 
 elim :: Solucion -> Solucion
-elim s@(m,[]) = s
-elim (m, f) = obtenSolucion([dpll (m,  elimLit lit f) | lit<-m])
+elim s
+        | s== (head $ allElim s) = s
+        | otherwise = obtenSolucion([dpll m| m <- allElim s])
 
 
 -- Seccion de funciones para la regla de reduccion
@@ -89,11 +89,14 @@ negElem l c =  elem (Neg l) c
 
 allRed::Solucion->[Solucion]
 allRed s@(m, []) = [s]
-allRed (m, f) = [(m,  redLit lit f) | lit<-m]
+allRed s@(m, f) = case [(m,  redLit lit f) | lit<-m, (redLit lit f)/=f] of
+        []-> [s]
+        v -> v
 
 red :: Solucion -> Solucion
-red s@(m, []) = s
-red (m, f) = obtenSolucion([dpll (m,  redLit lit f) | lit<-m])
+red s@(m, f)
+        | s== (head $ allRed s) = s
+        | otherwise = obtenSolucion([dpll m | m<-allRed s])
 
 -- Seccion de funciones para la regla de separacion
 lc :: Literal -> Literal
@@ -145,7 +148,10 @@ dpll s@(m,f) = case success s of
         False -> dpll (dpllsearch s)
 
 main :: Solucion -> Solucion
-main s = error "Funcion a implementar"
+main s = case dpll s of
+  m-> case conflict m of
+    True-> throw FAIL
+    False -> m
 
 -- Ejemplos
 
