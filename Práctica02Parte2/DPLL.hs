@@ -110,16 +110,15 @@ quitaNeg ((Neg x):xs) = x:(quitaNeg xs)
 quitaNeg (x:xs) = x:(quitaNeg xs)
 
 allSplit:: Solucion->[Solucion]
-allSplit s@(m,f) = case [l | l<- (nub $ quitaNeg $ literales f), not(elem l m), not(negElem l m)]of
-                  []->[s]
-                  v -> [(lit:m, f) | lit<-v]++[((Neg lit):m, f) | lit<-v]
+allSplit s@(m,f) = case [x|x<-literales f,not(elem x m),not(elem (lc x) m)] of
+        [] -> [s]
+        w -> [(m `union` [a], f)| a <- w] `union` [(m `union` [lc a], f)| a <- w]
 
 
 split :: Solucion -> Solucion
-split s@(m, []) = s
-split s@(m,f) = case [l | l<- (nub $ quitaNeg $ literales f), not(elem l m), not(negElem l m)]of
-                  []->s
-                  v -> obtenSolucion([dpll (lit:m, f) | lit<-v]++[dpll ((Neg lit):m, f) | lit<-v])
+split s@(m,f) = case [x|x<-literales f,not(elem x m),not(elem (lc x) m)] of
+        [] -> s
+        w -> obtenSolucion([dpll((m `union` [a]), f)| a <- w] `union` [dpll((m `union` [lc a]), f)| a <- w])
 
 -- Seccion de funciones para la regla de conflicto
 
