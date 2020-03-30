@@ -37,7 +37,7 @@ unit (m,x:xs)
 elim :: Solucion -> Solucion
 elim ([],m) = ([],m)
 elim(m,[]) = (m,[])
-elim (m, f) = (m, [c| c<-f, [y| y<-c, elem y m]==[]])
+elim (m, f) = (m, [c | c<-f, [y | y<-c, elem y m]==[]])
 
 
 -- Seccion de funciones para la regla de reduccion
@@ -67,7 +67,7 @@ literales[] = []
 literales (y:ys) = union y (literales ys)
 
 split :: Solucion -> [Solucion]
-split s@(m,f) = case [x|x<-literales f,not(elem x m),not(elem (lc x) m)] of
+split s@(m,f) = case [x |x<-literales f,not(elem x m),not(elem (lc x) m)] of
         []->[s]
         (x:xs)->[(x:m,f),(lc x:m,f)]
 

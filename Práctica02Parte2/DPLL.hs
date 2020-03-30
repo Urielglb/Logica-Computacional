@@ -12,6 +12,7 @@ import LProp
 import Data.List
 import Control.Exception
 
+
 type Literal = Prop
 type Clausula = [Literal]
 type Formula = [Clausula]
@@ -26,19 +27,10 @@ instance Exception MyException
 
 obtenSolucion:: [Solucion]-> Solucion
 
-obtenSolucion [] =  throw FAIL
+obtenSolucion [x] = x
 obtenSolucion (x:l)
-  | success x = x
-  | otherwise = obtenSolucion l
-
-noContiene:: Literal -> Modelo -> Bool
-noContiene l [] = False
-noContiene l [x]
-        | l == x = False
-        | otherwise = True
-noContiene l (x:xs)
-        | l==x = False
-        | otherwise = noContiene l xs
+  | conflict x = obtenSolucion l
+  | otherwise = x
 
 
 -- Seccion de funciones para la regla de la clausula unitaria
@@ -46,40 +38,25 @@ esLiteral :: Clausula -> Bool
 esLiteral [x] = True
 esLiteral m = False
 
-allUnit::Solucion ->[Solucion]
-allUnit s@(m,f) = case [head l | l <- f, esLiteral l] of
-        []->[s]
-        v -> case [b | b<-v, not (negElem b m)] of
-                [] -> [s]
-                w -> [((m `union` [a]), f \\ [[a]])| a <- w]
-
 unit :: Solucion -> Solucion
 unit s@(m,f) = case [head l | l <- f, esLiteral l] of
-        []->s
+        []-> s
         v -> case [b | b<-v, not (negElem b m)] of
                 [] -> s
-                w -> obtenSolucion([dpll((m `union` [a]), f \\ [[a]])| a <- w])
+                w -> obtenSolucion [dpll ((m `union` [a]), f \\ [[a]])| a <- w]
 
 --  Seccion de funciones para la regla de eliminacion
 
 elimLit :: Literal-> Formula -> Formula
 elimLit lit form = [c | c<-form, not (elem lit c)]
 
-allElim :: Solucion -> [Solucion]
-allElim s@(m,[]) = [s]
-allElim (m, f) =[ (m,  elimLit lit f) | lit<-m]
-
 
 elim :: Solucion -> Solucion
 elim s@(m,[]) = s
-elim (m, f) = obtenSolucion([dpll (m,  elimLit lit f) | lit<-m])
+elim (m, f) = obtenSolucion [dpll (m,  elimLit lit f) | lit<-m]
 
 
 -- Seccion de funciones para la regla de reduccion
-
-redC :: Modelo->Clausula->Clausula
-redC m c = [clau | clau<-c, not(negElem clau m)]
-
 redLit:: Literal->Formula->Formula
 redLit l f = [[lit | lit<-c, not (negElem l [lit])] | c<-f]
 
@@ -87,18 +64,11 @@ negElem:: Literal->Clausula->Bool
 negElem (Neg l) c =  elem l c
 negElem l c =  elem (Neg l) c
 
-allRed::Solucion->[Solucion]
-allRed s@(m, []) = [s]
-allRed (m, f) = [(m,  redLit lit f) | lit<-m]
-
 red :: Solucion -> Solucion
 red s@(m, []) = s
 red (m, f) = obtenSolucion([dpll (m,  redLit lit f) | lit<-m])
 
 -- Seccion de funciones para la regla de separacion
-lc :: Literal -> Literal
-lc (Neg x) = x
-lc x = Neg x
 
 literales:: Formula -> [Literal]
 literales[] = []
@@ -108,11 +78,6 @@ quitaNeg:: [Literal]-> [Literal]
 quitaNeg [] = []
 quitaNeg ((Neg x):xs) = x:(quitaNeg xs)
 quitaNeg (x:xs) = x:(quitaNeg xs)
-
-allSplit:: Solucion->[Solucion]
-allSplit s@(m,f) = case [l | l<- (nub $ quitaNeg $ literales f), not(elem l m), not(negElem l m)]of
-                  []->[s]
-                  v -> [(lit:m, f) | lit<-v]++[((Neg lit):m, f) | lit<-v]
 
 
 split :: Solucion -> Solucion
@@ -124,8 +89,8 @@ split s@(m,f) = case [l | l<- (nub $ quitaNeg $ literales f), not(elem l m), not
 -- Seccion de funciones para la regla de conflicto
 
 conflict :: Solucion -> Bool
-conflict(m,[[]]) = True
-conflict(m,f) = False
+conflict(m,[]) = False
+conflict(m, x:f) = or [x==[], conflict (m, f)]
 
 -- Seccion de funciones para la regla de exito
 
@@ -136,7 +101,8 @@ success(m,f) = False
 -- Seccion de las funciones principales de DPLL
 
 dpllsearch :: Solucion -> Solucion
-dpllsearch s@(m,f) = split $ red $ elim $ unit s
+dpllsearch s@(m,f) =split $ red $ elim $ unit s
+
 
 dpll :: Solucion -> Solucion
 dpll s@(m,f) = case success s of
@@ -146,8 +112,10 @@ dpll s@(m,f) = case success s of
         False -> dpll (dpllsearch s)
 
 main :: Solucion -> Solucion
-main s = error "Funcion a implementar"
-
+main s = case dpll s of
+  m-> case conflict m of
+    True-> throw FAIL
+    False -> m
 -- Ejemplos
 
 bueno = [[Neg (V "P"), V "R", Neg (V "T")],[Neg (V "Q"), Neg (V "R")],[V "P",Neg (V "S")],[Neg (V "P"), V "Q", Neg (V "R"), Neg (V "S")]]
